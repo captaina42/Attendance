@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>AttendanceSecure</title>
+    <meta
+      name="description"
+      content="Secure attendance for lecturers and students: timed sessions, live face capture and device biometric verification."
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/css/style.css" />
+    <meta name="theme-color" content="#11163f" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="icon" href="/icons/favicon-32.png" sizes="32x32" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="AttendanceSecure" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <script src="/js/pwa.js" defer></script>
+  </head>
+  <body class="land">
+    <div class="splash" id="splash" aria-hidden="true">
+      <img src="/icons/icon-192.png" width="72" height="72" alt="" />
+      <b>AttendanceSecure</b>
+    </div>
+
+    <div class="hero" id="entry" hidden>
+      <div class="brand"><i></i> AttendanceSecure</div>
+      <h1 id="title">Attendance that proves it was you.</h1>
+      <p id="subtitle">
+        Sign in once — lecturers land on their dashboard, students land on theirs.
+      </p>
+
+      <div class="auth card" style="margin: 0 auto; text-align: left">
+        <form id="form" novalidate>
+          <label for="identifier">Email or student number</label>
+          <input
+            class="inp"
+            id="identifier"
+            name="identifier"
+            autocomplete="username"
+            autocapitalize="none"
+            spellcheck="false"
+            required
+          />
+          <label for="password">Password</label>
+          <input
+            class="inp"
+            id="password"
+            name="password"
+            type="password"
+            autocomplete="current-password"
+            required
+          />
+          <p class="err" id="msg" role="alert"></p>
+          <button class="btn full" id="submit" type="submit">Sign in</button>
+        </form>
+        <p class="sub" style="text-align: center; margin-top: 14px">
+          New student? <a href="/student/" style="color: var(--blue); font-weight: 600">Create an account</a>
+        </p>
+      </div>
+
+      <div class="hero row" style="margin-top: 22px">
+        <button class="btn ghost" id="install" data-install hidden type="button">
+          Install app
+        </button>
+        <a class="btn ghost" href="/student/">Student portal</a>
+      </div>
+    </div>
+
+    <style>
+      .splash {
+        position: fixed;
+        inset: 0;
+        display: grid;
+        place-content: center;
+        justify-items: center;
+        gap: 14px;
+        background: radial-gradient(900px 500px at 20% 0, #12306e, #050b1a);
+        color: #fff;
+        font: 600 18px/1.2 Inter, system-ui, sans-serif;
+        z-index: 50;
+      }
+      .splash[hidden] {
+        display: none;
+      }
+      .hero .auth .btn {
+        min-width: 0;
+      }
+      .hero .auth .inp {
+        margin-bottom: 12px;
+      }
+    </style>
+
+    <script>
+      (function () {
+        const splash = document.getElementById("splash");
+        const entry = document.getElementById("entry");
+        const msg = document.getElementById("msg");
+        const submit = document.getElementById("submit");
+        const show = () => {
+          splash.hidden = true;
+          entry.hidden = false;
+        };
+        const go = (role) => {
+          window.location.replace(role === "staff" ? "/dashboard.html" : "/student/");
+        };
+
+        // Someone already signed in should never see the form again.
+        fetch("/api/entry/session", { credentials: "same-origin", cache: "no-store" })
+          .then((r) => r.json())
+          .then((data) => (data.authenticated ? go(data.role) : show()))
+          .catch(show);
+
+        document.getElementById("form").addEventListener("submit", async (e) => {
+          e.preventDefault();
+          msg.textContent = "";
+          submit.disabled = true;
+          submit.textContent = "Signing in…";
+          try {
+            const res = await fetch("/api/entry/login", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              credentials: "same-origin",
+              body: JSON.stringify({
+                identifier: document.getElementById("identifier").value,
+                password: document.getElementById("password").value,
+              }),
+            });
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) throw new Error(data.error || "Could not sign in.");
+            go(data.role);
+          } catch (err) {
+            msg.textContent = err.message;
+            submit.disabled = false;
+            submit.textContent = "Sign in";
+          }
+        });
+      })();
+    </script>
+  </body>
+</html>

@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Export Report · Attendance Pro</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="css/style.css" />
+      <meta name="theme-color" content="#11163f" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="icon" href="/icons/favicon-32.png" sizes="32x32" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="AttendanceSecure" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <script src="/js/pwa.js" defer></script>
+  </head>
+  <body data-page="export" data-auth>
+    <div class="app">
+      <aside class="side">
+        <div class="brand">
+          <i></i>
+          Attendance Pro
+        </div>
+        <a href="dashboard.html">Dashboard</a>
+        <a href="create-session.html">Create Session</a>
+        <a href="live.html">Live Attendance</a>
+        <a href="records.html">Attendance Records</a>
+        <a href="flagged.html">Flagged Students</a>
+        <a href="export.html" class="on">Export Report</a>
+        <a class="out" href="login.html">Logout</a>
+      </aside>
+      <main>
+        <header class="top">
+          <div>
+            <p class="crumb">Dashboard › Export Report</p>
+            <h1>Export Report</h1>
+          </div>
+          <div class="user">
+            <span class="av"></span>
+            <div>
+              <span class="uname"></span>
+              <small>Lecturer</small>
+            </div>
+          </div>
+        </header>
+        <div class="page">
+          <div class="card noprint" style="margin-top: 20px">
+            <div style="display: flex; gap: 16px; flex-wrap: wrap; align-items: flex-end">
+              <div>
+                <label style="margin-top: 0">Course</label>
+                <select class="inp" id="rc">
+                  <option value="">All courses</option>
+                </select>
+              </div>
+              <button class="btn" id="print" type="button">🖨 Print</button>
+              <button class="btn ghost" id="pdf" type="button">Download PDF</button>
+            </div>
+            <p class="sub" style="margin-top: 12px">
+              In the print window, choose "Save as PDF" as the destination to keep a copy.
+            </p>
+          </div>
+          <div class="card report" style="margin-top: 20px">
+            <div class="rhead">
+              <div>
+                <h1>Attendance Pro</h1>
+                <p class="sub">Attendance Report</p>
+              </div>
+              <div style="text-align: right">
+                <b id="rt"></b>
+                <p class="sub">
+                  <span id="cnt">0</span>
+                  records
+                </p>
+              </div>
+            </div>
+            <table id="rep">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Student ID</th>
+                  <th>Name</th>
+                  <th>Course</th>
+                  <th>Time</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="rb"></tbody>
+            </table>
+          </div>
+        </div>
+      </main>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+    <script src="js/app.js"></script>
+  </body>
+</html>

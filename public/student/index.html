@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#11163f">
+<title>AttendanceSecure · Student</title>
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="AttendanceSecure">
+<script src="/js/pwa.js" defer></script>
+<link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+<div class="phone">
+
+  <!-- ============ LOGIN / REGISTER ============ -->
+  <section id="authView" class="auth">
+    <div class="brand-row"><span class="logo">A</span><div><b>AttendSecure</b><small>STUDENT PORTAL</small></div></div>
+    <h1 class="auth-title">Your attendance,<br><span>made simpler.</span></h1>
+    <div class="card">
+      <div class="tabs"><button id="loginTab" class="active" type="button">Log in</button><button id="registerTab" type="button">Create account</button></div>
+      <h2 id="formTitle">Welcome back</h2>
+      <p class="muted" id="formSubtitle">Enter your details to continue.</p>
+      <form id="authForm">
+        <div id="nameField" class="field hidden"><label>Full name</label><input id="fullName" autocomplete="name"></div>
+        <div id="studentField" class="field hidden"><label>Student number</label><input id="studentNumber" placeholder="e.g. GOU/SE/2026/001"></div>
+        <div id="identifierWrap" class="field"><label id="identifierLabel">Student number or email</label><input id="identifier" required></div>
+        <div id="emailField" class="field hidden"><label>Email address</label><input id="email" type="email"></div>
+        <div id="departmentField" class="field hidden"><label>Department</label><input id="department" list="departmentList" placeholder="e.g. Software Engineering" autocomplete="organization"><datalist id="departmentList"><option value="Computer Science"><option value="Software Engineering"><option value="Information Technology"><option value="Cyber Security"><option value="Computer Engineering"><option value="Electrical/Electronic Engineering"><option value="Mechanical Engineering"><option value="Civil Engineering"><option value="Architecture"><option value="Estate Management"><option value="Quantity Surveying"><option value="Accounting"><option value="Business Administration"><option value="Economics"><option value="Mass Communication"><option value="Law"><option value="Medicine and Surgery"><option value="Nursing Science"><option value="Microbiology"><option value="Biochemistry"><option value="Industrial Chemistry"><option value="Applied Biology"><option value="Physics"><option value="Mathematics"><option value="Statistics"><option value="Political Science"><option value="Public Administration"><option value="English and Literary Studies"><option value="History and International Studies"><option value="Philosophy"><option value="Education"></datalist></div>
+        <div id="levelField" class="field hidden"><label>Level</label><select id="level"><option value="" selected disabled>Select your level</option><option>100 Level</option><option>200 Level</option><option>300 Level</option><option>400 Level</option><option>500 Level</option><option>600 Level</option></select></div>
+        <div class="field"><label>Password</label><input id="password" type="password" minlength="8" required></div>
+        <p id="message" class="message"></p>
+        <button id="submitButton" class="btn primary">Log in</button>
+      </form>
+    </div>
+    <p class="fine">Student access portal</p>
+  </section>
+
+  <!-- ============ APP ============ -->
+  <section id="appView" class="hidden">
+    <div class="app-body">
+
+      <!-- HOME -->
+      <div id="screen-home" class="screen">
+        <div class="topbar"><div><small class="eyebrow">STUDENT DASHBOARD</small><h1>Hello, <span id="studentName">Student</span></h1><p class="muted">Your classes and attendance activity.</p></div><div class="avatar" id="avatar">O</div></div>
+        <div class="stats"><div class="card stat"><small>RECORDS</small><h2 id="recordCount">0</h2></div><div class="card stat"><small>VERIFIED</small><h2 id="verifiedCount">0</h2></div></div>
+        <div class="card">
+          <h2>Submit attendance</h2>
+          <p class="muted">Enter the active code provided by your lecturer.</p>
+          <form id="attendanceForm">
+            <div class="field"><label>Attendance code</label><input id="attendanceCode" maxlength="30" placeholder="e.g. BIO215A" autocomplete="off"><p id="attendanceMessage" class="message"></p></div>
+            <button class="btn primary">Start attendance</button>
+          </form>
+        </div>
+        <h3 class="section-title">Active sessions</h3>
+        <div id="sessionsList" class="empty">Loading…</div>
+      </div>
+
+      <!-- CLASSES -->
+      <div id="screen-classes" class="screen hidden">
+        <div class="topbar"><div><small class="eyebrow">CLASSES</small><h1>Your classes</h1><p class="muted">Open a session to mark attendance.</p></div></div>
+        <h3 class="section-title">Active now</h3>
+        <div id="classesActive" class="empty">Loading…</div>
+        <h3 class="section-title">Attendance history</h3>
+        <div id="historyList" class="empty">Loading…</div>
+      </div>
+
+      <!-- PROFILE -->
+      <div id="screen-profile" class="screen hidden">
+        <div class="topbar"><div><small class="eyebrow">PROFILE</small><h1>My profile</h1><p class="muted">Details used on your attendance records.</p></div></div>
+        <div class="card profile-head"><div class="avatar avatar-lg" id="profileAvatar">O</div><div><b id="profileName">Student</b><small id="profileNumber">—</small></div></div>
+        <div class="card">
+          <div class="row"><span>Department</span><b id="profileDepartment">—</b></div>
+          <div class="row"><span>Level</span><b id="profileLevel">—</b></div>
+          <div class="row"><span>Email</span><b id="profileEmail">—</b></div>
+          <div class="row"><span>Fingerprint</span><b id="profileBiometric">Not enrolled</b></div>
+        </div>
+        <button id="resetBiometric" class="btn outline" type="button">Reset biometrics on this account</button>
+        <button id="installApp" class="btn outline hidden" type="button">Install AttendanceSecure</button>
+        <button id="logoutButton" class="btn outline">Log out</button>
+      </div>
+
+    </div>
+
+    <nav class="nav">
+      <button class="nav-item active" data-screen="home"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10.6 12 4l8 6.6V20a1 1 0 0 1-1 1h-4.6v-6.2H9.6V21H5a1 1 0 0 1-1-1z"/></svg><span>Home</span></button>
+      <button class="nav-item" data-screen="classes"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="4.5" width="7" height="7" rx="1.6"/><rect x="13.5" y="4.5" width="7" height="7" rx="1.6"/><rect x="3.5" y="14.5" width="7" height="5" rx="1.6"/><rect x="13.5" y="14.5" width="7" height="5" rx="1.6"/></svg><span>Classes</span></button>
+      <button class="nav-item" data-screen="profile"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4.5 20.5c0-4.1 3.4-6.5 7.5-6.5s7.5 2.4 7.5 6.5z"/></svg><span>Profile</span></button>
+    </nav>
+  </section>
+
+  <!-- ============ STEP 1: SESSION + COUNTDOWN ============ -->
+  <section id="sessionScreen" class="overlay hidden">
+    <div class="overlay-head"><button class="icon-btn" data-back><svg viewBox="0 0 24 24"><path d="M14.5 5 7.5 12l7 7"/></svg></button><h2>Attendance Session</h2></div>
+    <div class="overlay-body">
+      <h1 class="course" id="sessionCourse">—</h1>
+      <div class="card info-card">
+        <div class="row"><span>Lecturer</span><b id="sessionLecturer">—</b></div>
+        <div class="row"><span>Class</span><b id="sessionLevel">—</b></div>
+        <div class="row"><span>Time</span><b id="sessionTime">—</b></div>
+      </div>
+      <div class="timer">
+        <svg class="ring" viewBox="0 0 128 128"><circle class="ring-bg" cx="64" cy="64" r="54"/><circle id="countdownRing" class="ring-fg" cx="64" cy="64" r="54"/></svg>
+        <div class="timer-text"><b id="countdownText">--:--</b><small>TIME LEFT</small></div>
+      </div>
+      <div class="note-card"><span class="dot"></span><p id="sessionTimerNote">Please do not refresh this page, your attendance will be lost.</p></div>
+      <div class="spacer"></div>
+      <button id="startVerification" class="btn primary">Verify identity</button>
+      <button class="btn ghost" data-back>Cancel</button>
+    </div>
+  </section>
+
+  <!-- ============ STEP 2: FINGERPRINT ============ -->
+  <section id="fingerScreen" class="overlay hidden">
+    <div class="overlay-head"><button class="icon-btn" data-back><svg viewBox="0 0 24 24"><path d="M14.5 5 7.5 12l7 7"/></svg></button><h2>Verify with Fingerprint</h2></div>
+    <div class="overlay-body center">
+      <button id="fingerButton" class="finger" aria-label="Verify with fingerprint">
+        <svg viewBox="0 0 64 64"><g fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M32 10c12 0 22 10 22 22 0 7-1 13-3 18"/><path d="M32 18c8 0 14 6 14 14 0 8-1 15-3 22"/><path d="M32 26c4 0 6 3 6 6 0 10-2 18-5 25"/><path d="M32 54c3-10 4-18 4-22"/><path d="M21 23c-4 4-6 9-6 15 0 6 1 11 3 15"/><path d="M11 32c0-12 9-23 21-23"/></g></svg>
+      </button>
+      <h3>Fingerprint required</h3>
+      <p class="muted" id="fingerHint">Place your finger on the sensor to continue with attendance.</p>
+      <p id="fingerMessage" class="message"></p>
+      <div class="spacer"></div>
+      <button class="btn ghost" data-back>Cancel</button>
+    </div>
+  </section>
+
+  <!-- ============ STEP 3: CAMERA ============ -->
+  <section id="cameraScreen" class="overlay hidden">
+    <div class="overlay-head"><button class="icon-btn" data-back><svg viewBox="0 0 24 24"><path d="M14.5 5 7.5 12l7 7"/></svg></button><h2>Live Photo Capture</h2></div>
+    <div class="overlay-body">
+      <p class="muted center-text">Look into the camera to capture a clear photo of your face.</p>
+      <div class="camera-frame">
+        <video id="video" playsinline autoplay muted></video>
+        <div class="face-guide"></div>
+        <div class="camera-badge">Live</div>
+      </div>
+      <p id="cameraMessage" class="message center-text"></p>
+      <div class="camera-controls">
+        <button id="flipButton" class="round-btn" type="button" aria-label="Flip camera"><svg viewBox="0 0 24 24"><path d="M4 9a8 8 0 0 1 13.6-4.6L20 7"/><path d="M20 15a8 8 0 0 1-13.6 4.6L4 17"/><path d="M20 3v4h-4"/><path d="M4 21v-4h4"/></svg></button>
+        <button id="captureButton" class="shutter" type="button" aria-label="Capture photo"><span></span></button>
+        <span class="round-btn ghost-slot"></span>
+      </div>
+      <canvas id="canvas" hidden></canvas>
+    </div>
+  </section>
+
+  <!-- ============ STEP 4: SUCCESS ============ -->
+  <section id="successScreen" class="overlay hidden">
+    <div class="overlay-body center">
+      <div class="check"><svg viewBox="0 0 24 24"><path d="M5 13l4.5 4.5L19 7"/></svg></div>
+      <h1 class="success-title">Attendance Submitted</h1>
+      <p class="muted center-text" id="successNote">Your attendance has been recorded.</p>
+      <div class="pill" id="successPill">Submitted Successfully</div>
+      <div class="card info-card left">
+        <div class="row"><span>Course</span><b id="successCourse">—</b></div>
+        <div class="row"><span>Code</span><b id="successCode">—</b></div>
+        <div class="row"><span>Student ID</span><b id="successStudent">—</b></div>
+        <div class="row"><span>Time</span><b id="successTime">—</b></div>
+      </div>
+      <div class="spacer"></div>
+      <button class="btn primary" id="successStatus">View attendance status</button>
+      <button class="btn ghost" id="successHome">Back to Home</button>
+    </div>
+  </section>
+
+  <!-- ============ STEP 5: STATUS ============ -->
+  <section id="statusScreen" class="overlay hidden">
+    <div class="overlay-head"><button class="icon-btn" data-back><svg viewBox="0 0 24 24"><path d="M14.5 5 7.5 12l7 7"/></svg></button><h2>Attendance Status</h2></div>
+    <div class="overlay-body">
+      <div class="card course-card"><h3 id="statusCourse">—</h3><p class="muted" id="statusMeta">—</p></div>
+      <h3 class="section-title">Verification Status</h3>
+      <div class="card">
+        <div class="row"><span>Face capture</span><b id="statusFace">—</b></div>
+        <div class="row"><span>Fingerprint</span><b id="statusFinger">—</b></div>
+      </div>
+      <div class="card status-note"><span class="warn" id="statusBadge">Pending verification</span><p class="muted" id="statusNote">Your photo and biometric data are safely stored. Verification is in progress.</p></div>
+      <div class="spacer"></div>
+      <button class="btn primary" id="statusHome">Back to home</button>
+    </div>
+  </section>
+
+</div>
+<script src="app.js"></script>
+</body>
+</html>

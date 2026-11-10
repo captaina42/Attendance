@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Create Session · Attendance Pro</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="css/style.css" />
+      <meta name="theme-color" content="#11163f" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="icon" href="/icons/favicon-32.png" sizes="32x32" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="AttendanceSecure" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <script src="/js/pwa.js" defer></script>
+  </head>
+  <body data-page="create-session" data-auth>
+    <div class="app">
+      <aside class="side">
+        <div class="brand">
+          <i></i>
+          Attendance Pro
+        </div>
+        <a href="dashboard.html">Dashboard</a>
+        <a href="create-session.html" class="on">Create Session</a>
+        <a href="live.html">Live Attendance</a>
+        <a href="records.html">Attendance Records</a>
+        <a href="flagged.html">Flagged Students</a>
+        <a href="export.html">Export Report</a>
+        <a class="out" href="login.html">Logout</a>
+      </aside>
+      <main>
+        <header class="top">
+          <div>
+            <p class="crumb">Dashboard › Create Attendance Session</p>
+            <h1>Create Attendance Session</h1>
+          </div>
+          <div class="user">
+            <span class="av"></span>
+            <div>
+              <span class="uname"></span>
+              <small>Lecturer</small>
+            </div>
+          </div>
+        </header>
+        <div class="page">
+          <div class="g2">
+            <form class="card" id="cf">
+              <label style="margin-top: 0">Course</label>
+              <input
+                class="inp"
+                id="co"
+                list="courselist"
+                placeholder="e.g. CSC 215 - Algorithms"
+                autocomplete="off"
+                required
+              />
+              <datalist id="courselist"></datalist>
+              <label>Class</label>
+              <select class="inp" id="lv">
+                <option>100 Level</option>
+                <option>200 Level</option>
+                <option>300 Level</option>
+                <option>400 Level</option>
+                <option>500 Level</option>
+              </select>
+              <label>Duration</label>
+              <select class="inp" id="du" required>
+                <option value="30">30 seconds</option>
+                <option value="60" selected>1 minute</option>
+                <option value="120">2 minutes</option>
+              </select>
+              <label for="sc">Student code</label>
+              <div class="codegen">
+                <input
+                  class="inp"
+                  id="sc"
+                  maxlength="8"
+                  autocomplete="off"
+                  spellcheck="false"
+                  placeholder="e.g. 4F9A2C"
+                />
+                <button type="button" class="btn ghost" id="gencode">Generate</button>
+              </div>
+              <p class="sub">
+                Students enter this code on the check-in page to mark attendance. Leave it blank
+                and a new code is created when the session starts.
+              </p>
+              <br />
+              <button class="btn full">Start Session</button>
+            </form>
+            <div class="det">
+              <h2>Session Details</h2>
+              <p class="sub">
+                The code below is what students type in. Share it on the board or projector when
+                the session starts.
+              </p>
+              <label>Student code</label>
+              <div class="codebox" id="codeview">------</div>
+              <p class="sub" id="codemsg">
+                No code generated yet. You can generate one now, or one will be created when the
+                session starts.
+              </p>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+    <script src="js/app.js"></script>
+  </body>
+</html>

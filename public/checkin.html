@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Student Check-in · Attendance Pro</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="css/style.css" />
+      <meta name="theme-color" content="#11163f" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="icon" href="/icons/favicon-32.png" sizes="32x32" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="AttendanceSecure" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <script src="/js/pwa.js" defer></script>
+  </head>
+  <body class="land" data-page="checkin">
+    <div class="auth card">
+      <a href="index.html" class="brand">
+        <i></i>
+        Attendance Pro
+      </a>
+
+      <h1 style="font-size: 20px">Student check-in</h1>
+      <p class="sub">Enter the code your lecturer is showing to mark yourself present.</p>
+      <form id="cf">
+        <label>Session code</label>
+        <input
+          class="inp"
+          id="code"
+          maxlength="8"
+          autocomplete="off"
+          spellcheck="false"
+          placeholder="e.g. 4F9A2C"
+          required
+        />
+        <label>Student number</label>
+        <input class="inp" id="sno" maxlength="40" autocomplete="off" required />
+        <label>Full name</label>
+        <input class="inp" id="snm" maxlength="120" autocomplete="name" required />
+        <p class="err" id="msg" role="alert"></p>
+        <button class="btn full" id="sub">Mark me present</button>
+      </form>
+      <p class="sub" style="text-align: center; margin-top: 14px">
+        <a href="login.html" style="color: var(--blue); font-weight: 600">Lecturer login</a>
+      </p>
+    </div>
+    <script src="js/app.js"></script>
+  </body>
+</html>

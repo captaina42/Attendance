@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Login · Attendance Pro</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="css/style.css" />
+      <meta name="theme-color" content="#11163f" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="icon" href="/icons/favicon-32.png" sizes="32x32" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="AttendanceSecure" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <script src="/js/pwa.js" defer></script>
+  </head>
+  <body class="land" data-page="login">
+    <div class="auth card">
+      <a href="index.html" class="brand">
+        <i></i>
+        Attendance Pro
+      </a>
+
+      <h1 id="ttl" style="font-size: 20px"></h1>
+      <form id="af">
+        <div id="nmw">
+          <label>Full name</label>
+          <input class="inp" id="nm" />
+        </div>
+        <label id="idl"></label>
+        <input class="inp" id="id" required />
+        <label>Password</label>
+        <input class="inp" id="pw" type="password" required minlength="6" />
+        <p class="err" id="msg" role="alert"></p>
+        <button class="btn full" id="sub"></button>
+      </form>
+      <p class="sub" style="text-align: center; margin-top: 14px">
+        <span id="tx"></span>
+        <a href="#" id="sw" style="color: var(--blue); font-weight: 600"></a>
+      </p>
+      <p class="sub" style="text-align: center; margin-top: 6px">
+        <a href="checkin.html" style="color: var(--blue); font-weight: 600">Student? Check in with a code</a>
+      </p>
+    </div>
+    <script src="js/app.js"></script>
+  </body>
+</html>

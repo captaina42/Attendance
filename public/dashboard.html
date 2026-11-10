@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Dashboard · Attendance Pro</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="css/style.css" />
+      <meta name="theme-color" content="#11163f" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="icon" href="/icons/favicon-32.png" sizes="32x32" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="AttendanceSecure" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <script src="/js/pwa.js" defer></script>
+  </head>
+  <body data-page="dashboard" data-auth>
+    <div class="app">
+      <aside class="side">
+        <div class="brand">
+          <i></i>
+          Attendance Pro
+        </div>
+        <a href="dashboard.html" class="on">Dashboard</a>
+        <a href="create-session.html">Create Session</a>
+        <a href="live.html">Live Attendance</a>
+        <a href="records.html">Attendance Records</a>
+        <a href="flagged.html">Flagged Students</a>
+        <a href="export.html">Export Report</a>
+        <a class="out" href="login.html">Logout</a>
+        <button class="pwa-install" data-install hidden type="button" style="margin-top: 10px; width: 100%">
+          Install app
+        </button>
+      </aside>
+      <main>
+        <header class="top">
+          <div>
+            <h1>
+              Welcome,
+              <span class="uname"></span>
+            </h1>
+            <p class="sub">Lecturer dashboard</p>
+          </div>
+          <div class="user">
+            <span class="av"></span>
+            <div>
+              <span class="uname"></span>
+              <small>Lecturer</small>
+            </div>
+          </div>
+        </header>
+        <div class="page">
+          <div class="stats">
+            <div class="card">
+              <span class="sub">Sessions created</span>
+              <b id="s1">0</b>
+            </div>
+            <div class="card">
+              <span class="sub">Attendance marked</span>
+              <b id="s2">0</b>
+            </div>
+            <div class="card">
+              <span class="sub">Students seen</span>
+              <b id="s3">0</b>
+            </div>
+            <div class="card">
+              <span class="sub">Flagged</span>
+              <b id="s4">0</b>
+            </div>
+          </div>
+          <div class="g2">
+            <div class="card">
+              <h2>Quick Actions</h2>
+              <div class="qa">
+                <a href="create-session.html">
+                  <i></i>
+                  <b>Create Attendance Session</b>
+                  Start a new session for your class
+                </a>
+                <a href="records.html">
+                  <i></i>
+                  <b>View Attendance Records</b>
+                  Check attendance logs
+                </a>
+                <a href="flagged.html">
+                  <i></i>
+                  <b>View Flagged Students</b>
+                  Review suspicious submissions
+                </a>
+                <a href="export.html">
+                  <i></i>
+                  <b>Export Report</b>
+                  Print or save as PDF
+                </a>
+              </div>
+            </div>
+            <div class="card">
+              <h2>Your Sessions</h2>
+              <div id="cls"></div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+    <script src="js/app.js"></script>
+  </body>
+</html>

@@ -1,0 +1,16 @@
+# Dependencies
+node_modules/
+
+# Runtime data: the SQLite database, the JWT secret and captured private photos
+data/
+private_uploads/
+
+# Local secrets and logs
+.env
+.env.local
+*.log
+
+# Editor / OS noise
+.vscode/
+.DS_Store
+Thumbs.db

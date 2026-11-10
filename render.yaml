@@ -1,0 +1,35 @@
+# Render blueprint: one Node web service with a persistent disk for the SQLite
+# database and captured photos. Deploy via Render Dashboard -> New -> Blueprint.
+services:
+  - type: web
+    name: attendsecure
+    runtime: node
+    plan: starter
+    region: frankfurt
+    buildCommand: npm ci --omit=dev
+    startCommand: node scripts/seed.js && node server/server.js
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: 22.13.0
+      - key: NODE_ENV
+        value: production
+      - key: TRUST_PROXY
+        value: "1"
+      - key: DATA_DIR
+        value: /var/data
+      - key: JWT_SECRET
+        generateValue: true
+      - key: APP_ORIGIN
+        sync: false
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: ADMIN_NAME
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+    disk:
+      name: attendsecure-data
+      mountPath: /var/data
+      sizeGB: 1
