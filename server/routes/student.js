@@ -31,7 +31,10 @@ const {
   recordFor,
   logVerification,
   flagSubmission,
+  auditLog,
 } = require("../lib/sessions");
+const { validatePhoto, hamming } = require("../lib/photoValidation");
+const { broadcast } = require("../lib/events");
 
 const router = express.Router();
 
@@ -304,10 +307,11 @@ router.delete("/biometric/credential", requireStudent, sameOrigin, (req, res) =>
 });
 
 // Step 3: submit attendance. The photo is mandatory and the session must still be ACTIVE.
-router.post("/attendance", requireStudent, sameOrigin, (req, res) => {
+router.post("/attendance", requireStudent, sameOrigin, async (req, res) => {
   const studentId = req.student.id;
   const code = clean(req.body?.code).toUpperCase();
   const photo = req.body?.photo;
+  const faceCount = req.body?.faceCount;
   const now = Date.now();
 
   if (!code) return res.status(400).json({ error: "Enter the attendance code from your lecturer." });
@@ -315,10 +319,24 @@ router.post("/attendance", requireStudent, sameOrigin, (req, res) => {
     typeof photo === "string" && photo.match(/^data:image\/(jpeg|png|webp);base64,([A-Za-z0-9+/=]+)$/);
   if (!match) return res.status(400).json({ error: "Capture your photo to complete attendance." });
   const buffer = Buffer.from(match[2], "base64");
-  if (buffer.length < 2000)
+  if (buffer.length < 500)
     return res.status(400).json({ error: "That photo was too small. Capture again." });
   if (buffer.length > 5 * 1024 * 1024)
     return res.status(413).json({ error: "That photo is too large." });
+
+  // Server-side validation of the actual image (decode, quality, perceptual hash, hints).
+  let validation;
+  try {
+    validation = await validatePhoto(buffer, { faceCount });
+  } catch (e) {
+    console.error("photo validation", e);
+    return res.status(400).json({ error: "Could not process that photo. Capture again." });
+  }
+  if (!validation.ok && /corrupt|unsupported|unrecognised|resolution is too low/i.test(validation.reasons.join(" "))) {
+    // Hard failures: do not store.
+    const hard = validation.reasons.find((r) => /corrupt|unsupported|unrecognised|resolution/i.test(r));
+    return res.status(400).json({ error: hard || "Invalid photo. Capture again." });
+  }
 
   const row = db
     .prepare("SELECT * FROM attendance_sessions WHERE code = ? COLLATE NOCASE")
@@ -349,7 +367,49 @@ router.post("/attendance", requireStudent, sameOrigin, (req, res) => {
     )
     .get(session.id, photoHash, studentId);
 
-  const status = twin ? "flagged" : fingerprintVerified ? "verified" : "pending";
+  // Reused photograph by the same student in an earlier session.
+  const reused = db
+    .prepare(
+      `SELECT r.id, s.code FROM attendance_records r
+       JOIN attendance_sessions s ON s.id = r.session_id
+       WHERE r.student_id = ? AND r.photo_hash = ? AND r.session_id <> ?
+       ORDER BY r.submitted_at DESC LIMIT 1`,
+    )
+    .get(studentId, photoHash, session.id);
+
+  // Perceptual similarity against recent submissions (same session first, then global).
+  let similarTo = null;
+  if (validation.phash) {
+    const candidates = db
+      .prepare(
+        `SELECT r.id, st.full_name, r.photo_phash FROM attendance_records r
+         JOIN students st ON st.id = r.student_id
+         WHERE r.photo_phash <> '' AND r.submitted_at > ? AND r.student_id <> ?
+         ORDER BY r.submitted_at DESC LIMIT 200`,
+      )
+      .all(Date.now() - 90 * 24 * 60 * 60 * 1000, studentId);
+    for (const c of candidates) {
+      if (hamming(validation.phash, c.photo_phash) <= 10) { similarTo = c; break; }
+    }
+  }
+
+  const flagReasons = [...validation.reasons];
+  let severity = validation.severity || "low";
+  if (twin) {
+    flagReasons.push(`Same photo already submitted by ${twin.full_name} in this session`);
+    severity = "high";
+  }
+  if (reused) {
+    flagReasons.push(`Reused photograph from a previous session (${reused.code})`);
+    severity = "high";
+  }
+  if (similarTo) {
+    flagReasons.push(`Suspiciously similar to a photo submitted by ${similarTo.full_name}`);
+    if (severity !== "high") severity = "medium";
+  }
+
+  const hasFlags = flagReasons.length > 0;
+  const status = hasFlags ? "flagged" : fingerprintVerified ? "verified" : "pending";
   const ext = match[1] === "png" ? "png" : match[1] === "webp" ? "webp" : "jpg";
   const fileName = `${crypto.randomUUID()}.${ext}`;
   const relativePath = `photos/${fileName}`;
@@ -360,19 +420,60 @@ router.post("/attendance", requireStudent, sameOrigin, (req, res) => {
     const info = db
       .prepare(
         `INSERT INTO attendance_records
-          (session_id, student_id, submitted_at, photo_path, photo_hash, face_verified, fingerprint_verified, status)
-         VALUES (?,?,?,?,?,1,?,?)`,
+          (session_id, student_id, submitted_at, photo_path, photo_hash, photo_phash, photo_mime, photo_size,
+           face_verified, fingerprint_verified, status, photo_validation_status, photo_validation_detail, device_detail, face_count_reported)
+         VALUES (?,?,?,?,?,?,?,?,1,?,?,?,?,?,?)`,
       )
-      .run(session.id, studentId, now, relativePath, photoHash, fingerprintVerified, status);
+      .run(
+        session.id,
+        studentId,
+        now,
+        relativePath,
+        photoHash,
+        validation.phash,
+        validation.mime,
+        buffer.length,
+        fingerprintVerified,
+        status,
+        validation.ok ? "passed" : "flagged",
+        flagReasons.join("; "),
+        req.get("user-agent") || "",
+        validation.faceCountReported,
+      );
     const attendanceId = Number(info.lastInsertRowid);
 
-    if (twin)
+    if (hasFlags) {
       flagSubmission({
         attendanceId,
         sessionId: session.id,
         studentId,
-        reason: `Same face capture already submitted by ${twin.full_name} in this session`,
+        reason: flagReasons.join("; "),
+        severity,
+        detectionResult: JSON.stringify({ validation, twin: twin && twin.full_name, reused: reused && reused.code, similarTo: similarTo && similarTo.full_name }),
       });
+      auditLog({
+        actorRole: "system",
+        action: "flag_created",
+        entityType: "attendance_record",
+        entityId: attendanceId,
+        newValue: status,
+        detail: flagReasons.join("; "),
+      });
+      // Real-time alert to the lecturer who owns this session.
+      if (session.staff_id) {
+        const student = db.prepare("SELECT full_name, student_number FROM students WHERE id = ?").get(studentId);
+        broadcast(session.staff_id, "flagged", {
+          attendanceId,
+          studentName: student.full_name,
+          studentNumber: student.student_number,
+          course: shape(session).course,
+          sessionCode: session.code,
+          reason: flagReasons.join("; "),
+          severity,
+          markedAt: now,
+        });
+      }
+    }
 
     logVerification({ attendanceId, sessionId: session.id, studentId, method: "face", detail: "Live camera capture stored" });
     logVerification({
@@ -385,6 +486,15 @@ router.post("/attendance", requireStudent, sameOrigin, (req, res) => {
     });
 
     biometricAt.delete(studentId);
+    auditLog({
+      actorRole: "student",
+      actorId: studentId,
+      action: "attendance_submitted",
+      entityType: "attendance_record",
+      entityId: attendanceId,
+      newValue: status,
+      detail: fingerprintVerified ? "device verified" : "no fresh device check",
+    });
     res.status(201).json({
       message: "Attendance submitted successfully.",
       record: {

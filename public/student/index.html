@@ -76,7 +76,7 @@
           <div class="row"><span>Department</span><b id="profileDepartment">—</b></div>
           <div class="row"><span>Level</span><b id="profileLevel">—</b></div>
           <div class="row"><span>Email</span><b id="profileEmail">—</b></div>
-          <div class="row"><span>Fingerprint</span><b id="profileBiometric">Not enrolled</b></div>
+          <div class="row"><span>Device verification</span><b id="profileBiometric">Not enrolled</b></div>
         </div>
         <button id="resetBiometric" class="btn outline" type="button">Reset biometrics on this account</button>
         <button id="installApp" class="btn outline hidden" type="button">Install AttendanceSecure</button>
@@ -115,12 +115,12 @@
 
   <!-- ============ STEP 2: FINGERPRINT ============ -->
   <section id="fingerScreen" class="overlay hidden">
-    <div class="overlay-head"><button class="icon-btn" data-back><svg viewBox="0 0 24 24"><path d="M14.5 5 7.5 12l7 7"/></svg></button><h2>Verify with Fingerprint</h2></div>
+    <div class="overlay-head"><button class="icon-btn" data-back><svg viewBox="0 0 24 24"><path d="M14.5 5 7.5 12l7 7"/></svg></button><h2>Verify your identity</h2></div>
     <div class="overlay-body center">
       <button id="fingerButton" class="finger" aria-label="Verify with fingerprint">
         <svg viewBox="0 0 64 64"><g fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M32 10c12 0 22 10 22 22 0 7-1 13-3 18"/><path d="M32 18c8 0 14 6 14 14 0 8-1 15-3 22"/><path d="M32 26c4 0 6 3 6 6 0 10-2 18-5 25"/><path d="M32 54c3-10 4-18 4-22"/><path d="M21 23c-4 4-6 9-6 15 0 6 1 11 3 15"/><path d="M11 32c0-12 9-23 21-23"/></g></svg>
       </button>
-      <h3>Fingerprint required</h3>
+      <h3>Device verification required</h3>
       <p class="muted" id="fingerHint">Place your finger on the sensor to continue with attendance.</p>
       <p id="fingerMessage" class="message"></p>
       <div class="spacer"></div>

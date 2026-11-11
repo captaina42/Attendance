@@ -27,6 +27,102 @@ async function api(path, { method = "GET", body } = {}) {
 const badge = (status) =>
   status === "flagged" ? '<span class="b r">Flagged</span>' : '<span class="b g">Present</span>';
 
+// ---- toast + SSE real-time alerts ----
+function ensureToast() {
+  if (document.getElementById("toast")) return;
+  const t = document.createElement("div");
+  t.id = "toast";
+  t.className = "toast";
+  t.innerHTML = '<div class="t"></div><div class="m"></div>';
+  document.body.appendChild(t);
+}
+function showToast(title, msg) {
+  ensureToast();
+  const t = document.getElementById("toast");
+  t.querySelector(".t").textContent = title;
+  t.querySelector(".m").textContent = msg;
+  t.classList.add("show");
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.classList.remove("show"), 6000);
+}
+function connectSse() {
+  if (!window.EventSource) return;
+  try {
+    const es = new EventSource("/api/events");
+    es.addEventListener("flagged", (e) => {
+      try {
+        const d = JSON.parse(e.data);
+        showToast("Flagged submission", `${d.studentName} (${d.studentNumber}) — ${d.reason}`);
+        // refresh current page data if present
+        const page = document.body.dataset.page;
+        if (page === "dashboard") pages.dashboard().catch(() => {});
+        if (page === "records") pages.records().catch(() => {});
+        if (page === "flagged") pages.flagged().catch(() => {});
+        if (page === "live") { /* live page self-polls */ }
+      } catch {}
+    });
+    es.onerror = () => { /* browser auto-retries */ };
+  } catch {}
+}
+
+// ---- photo review modal ----
+function openPhotoModal(id) {
+  api("/records/" + id + "/detail")
+    .then(({ record: r }) => {
+      const backdrop = document.createElement("div");
+      backdrop.className = "modal-backdrop";
+      const sevClass = r.flagSeverity === "high" ? "sev-high" : r.flagSeverity === "medium" ? "sev-medium" : "sev-low";
+      const pillClass = (r.flagReviewStatus || "").toLowerCase().replace(/ /g, "");
+      backdrop.innerHTML = `
+        <div class="modal">
+          <div class="modal-head"><h3>Student Photo Review</h3><button class="btn ghost sm" data-close>Close</button></div>
+          <div class="modal-body">
+            ${r.hasPhoto ? `<img src="/api/records/${r.id}/photo" alt="student photo" onerror="this.style.display='none'">` : '<p class="empty">No photo stored.</p>'}
+            <div class="card"><div class="row"><span>Student</span><b>${esc(r.studentName)}</b></div>
+              <div class="row"><span>Student ID</span><b>${esc(r.studentNumber)}</b></div>
+              <div class="row"><span>Course</span><b>${esc(r.course)}</b></div>
+              <div class="row"><span>Session</span><b>${esc(r.sessionCode)}</b></div>
+              <div class="row"><span>Submitted</span><b>${new Date(r.markedAt).toLocaleString()}</b></div>
+              <div class="row"><span>Device verification</span><b>${r.fingerprintVerified ? "Verified (passkey)" : "Not verified"}</b></div>
+              <div class="row"><span>Photo validation</span><b>${esc(r.photoValidationStatus || "n/a")}</b></div>
+              ${r.photoValidationDetail ? `<div class="row"><span>Validation detail</span><b>${esc(r.photoValidationDetail)}</b></div>` : ""}
+              <div class="row"><span>Face count (client hint)</span><b>${r.faceCountReported == null ? "n/a" : r.faceCountReported}</b></div>
+              ${r.flagReason ? `<div class="row"><span>Flag reason</span><b class="${sevClass}">${esc(r.flagReason)}</b></div>` : ""}
+              ${r.flagSeverity ? `<div class="row"><span>Severity</span><b class="${sevClass}">${esc(r.flagSeverity)}</b></div>` : ""}
+              ${r.flagReviewStatus ? `<div class="row"><span>Review status</span><b><span class="status-pill ${pillClass}">${esc(r.flagReviewStatus)}</span></b></div>` : ""}
+              ${r.flagReviewNotes ? `<div class="row"><span>Review notes</span><b>${esc(r.flagReviewNotes)}</b></div>` : ""}
+              ${r.flagReviewedAt ? `<div class="row"><span>Reviewed at</span><b>${new Date(r.flagReviewedAt).toLocaleString()}</b></div>` : ""}
+            </div>
+            ${r.verificationLogs && r.verificationLogs.length ? `<div class="card"><h4>Verification log</h4>${r.verificationLogs.map((l) => `<div class="row"><span>${esc(l.method)}</span><b>${l.ok ? "OK" : "FAIL"} · ${esc(l.detail)} · ${new Date(l.created_at).toLocaleTimeString()}</b></div>`).join("")}</div>` : ""}
+          </div>
+          <div class="modal-foot">
+            <button class="btn ok sm" data-review="CLEARED" data-id="${r.id}">Clear flag</button>
+            <button class="btn r sm" data-review="CONFIRMED" data-id="${r.id}">Confirm flag</button>
+            <input class="inp" placeholder="Review notes (optional)" style="flex:1;min-width:160px" data-notes>
+            <button class="btn ghost sm" data-close>Close</button>
+          </div>
+        </div>`;
+      document.body.appendChild(backdrop);
+      backdrop.querySelector("[data-close]").onclick = () => backdrop.remove();
+      backdrop.querySelectorAll("[data-close]").forEach((b) => (b.onclick = () => backdrop.remove()));
+      backdrop.addEventListener("click", (e) => { if (e.target === backdrop) backdrop.remove(); });
+      backdrop.querySelectorAll("[data-review]").forEach((b) => {
+        b.onclick = async () => {
+          const notes = backdrop.querySelector("[data-notes]").value;
+          try {
+            await api("/records/" + b.dataset.id, { method: "PATCH", body: { reviewStatus: b.dataset.review, notes } });
+            backdrop.remove();
+            showToast("Review saved", b.dataset.review);
+            const page = document.body.dataset.page;
+            if (page === "records") pages.records();
+            if (page === "flagged") pages.flagged();
+          } catch (err) { alert(err.message); }
+        };
+      });
+    })
+    .catch((err) => alert(err.message));
+}
+
 /** Table rows for attendance records. `withAction` adds a Flag / Clear flag button column. */
 function recordRows(list, emptyMsg, withAction) {
   if (!list.length) return empty(withAction ? 7 : 6, emptyMsg);
@@ -35,10 +131,12 @@ function recordRows(list, emptyMsg, withAction) {
       const action = withAction
         ? `<td><button class="btn ghost sm" data-flag="${r.status === "flagged" ? "present" : "flagged"}" data-id="${r.id}">${
             r.status === "flagged" ? "Clear flag" : "Flag"
-          }</button></td>`
-        : "";
+          }</button>
+          <button class="btn ghost sm" data-view="${r.id}">View photo</button></td>`
+        : `<td><button class="btn ghost sm" data-view="${r.id}">View photo</button></td>`;
+      const sev = r.flagSeverity ? ` <span class="${r.flagSeverity === 'high' ? 'sev-high' : r.flagSeverity === 'medium' ? 'sev-medium' : 'sev-low'}">${esc(r.flagSeverity)}</span>` : "";
       return `<tr><td>${i + 1}</td><td>${esc(r.studentId)}</td><td>${esc(r.name)}</td><td>${esc(r.course)}</td>
-        <td>${fmt(r.markedAt)}</td><td>${badge(r.status)}</td>${action}</tr>`;
+        <td>${fmt(r.markedAt)}</td><td>${badge(r.status)}${sev}</td>${action}</tr>`;
     })
     .join("");
 }
@@ -304,6 +402,18 @@ const pages = {
     };
     $("#q").oninput = draw;
     document.addEventListener("click", async (e) => {
+      const v = e.target.closest("[data-view]");
+      if (v) { openPhotoModal(v.dataset.view); return; }
+      const rv = e.target.closest("[data-review]");
+      if (rv) {
+        try {
+          await api("/records/" + rv.dataset.id, { method: "PATCH", body: { reviewStatus: rv.dataset.review, notes: "" } });
+          const page = document.body.dataset.page;
+          if (page === "flagged") pages.flagged();
+          if (page === "records") pages.records();
+        } catch (err) { alert(err.message); }
+        return;
+      }
       const b = e.target.closest("[data-flag]");
       if (!b) return;
       await api("/records/" + b.dataset.id, { method: "PATCH", body: { status: b.dataset.flag } });
@@ -319,16 +429,35 @@ const pages = {
       $("#fb").innerHTML = list.length
         ? list
             .map(
-              (
-                r,
-                i,
-              ) => `<tr><td>${i + 1}</td><td>${esc(r.studentId)}</td><td>${esc(r.name)}</td><td>${esc(r.course)}</td>
-              <td>${fmt(r.markedAt)}</td><td><button class="btn ok sm" data-flag="present" data-id="${r.id}">Mark as verified</button></td></tr>`,
+              (r, i) => `<tr>
+                <td>${i + 1}</td>
+                <td>${esc(r.studentId)}</td>
+                <td>${esc(r.name)}</td>
+                <td>${esc(r.course)}</td>
+                <td>${fmt(r.markedAt)}</td>
+                <td>${r.flagSeverity ? `<span class="${r.flagSeverity === 'high' ? 'sev-high' : r.flagSeverity === 'medium' ? 'sev-medium' : 'sev-low'}">${esc(r.flagSeverity)}</span>` : ""}<br><small>${esc(r.flagReason || "")}</small><br><span class="status-pill ${(r.flagReviewStatus||'').toLowerCase().replace(/ /g,'')}">${esc(r.flagReviewStatus || 'PENDING REVIEW')}</span></td>
+                <td>
+                  <button class="btn ghost sm" data-view="${r.id}">View photo</button>
+                  <button class="btn ok sm" data-review="CLEARED" data-id="${r.id}">Clear</button>
+                  <button class="btn r sm" data-review="CONFIRMED" data-id="${r.id}">Confirm</button>
+                </td></tr>`,
             )
             .join("")
-        : empty(6, "No flagged students. Flag a record from the Attendance Records page.");
+        : empty(7, "No flagged students. Flagged submissions appear here automatically.");
     };
     document.addEventListener("click", async (e) => {
+      const v = e.target.closest("[data-view]");
+      if (v) { openPhotoModal(v.dataset.view); return; }
+      const rv = e.target.closest("[data-review]");
+      if (rv) {
+        try {
+          await api("/records/" + rv.dataset.id, { method: "PATCH", body: { reviewStatus: rv.dataset.review, notes: "" } });
+          const page = document.body.dataset.page;
+          if (page === "flagged") pages.flagged();
+          if (page === "records") pages.records();
+        } catch (err) { alert(err.message); }
+        return;
+      }
       const b = e.target.closest("[data-flag]");
       if (!b) return;
       await api("/records/" + b.dataset.id, { method: "PATCH", body: { status: b.dataset.flag } });
@@ -422,6 +551,7 @@ const pages = {
       /* not logged in */
     }
     if (!me) return void (location.href = "login.html");
+    connectSse();
     document.querySelectorAll(".uname").forEach((e) => (e.textContent = me.name));
     $(".out")?.addEventListener("click", async (e) => {
       e.preventDefault();

@@ -28,6 +28,22 @@ app.use("/api/auth", require("./routes/auth"));
 app.use("/api/courses", require("./routes/courses"));
 app.use("/api/sessions", require("./routes/sessions"));
 app.use("/api/records", require("./routes/records"));
+
+// Real-time staff alerts (SSE). Staff-only; one connection per tab.
+const { requireStaff } = require("./middleware/auth");
+const { register: registerSse } = require("./lib/events");
+app.get("/api/events", requireStaff, (req, res) => {
+  res.setHeader("Content-Type", "text/event-stream");
+  res.setHeader("Cache-Control", "no-cache, no-transform");
+  res.setHeader("Connection", "keep-alive");
+  res.setHeader("X-Accel-Buffering", "no");
+  res.flushHeaders && res.flushHeaders();
+  res.write(`event: ready\ndata: ${JSON.stringify({ ok: true })}\n\n`);
+  registerSse(req.staff.id, res);
+  // heartbeat
+  const hb = setInterval(() => { try { res.write(": ping\n\n"); } catch {} }, 25000);
+  req.on("close", () => clearInterval(hb));
+});
 app.use("/api/checkin", require("./routes/checkin"));
 app.use("/api/student", require("./routes/student"));
 

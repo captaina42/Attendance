@@ -462,9 +462,21 @@ $("captureButton").onclick = async () => {
     }
     ctx.drawImage(video, sx, sy, side, side, 0, 0, size, size);
     const photo = canvas.toDataURL("image/jpeg", 0.72);
+    // Best-effort face count via the browser FaceDetector API (Chrome/Edge). Sent as a hint;
+    // the server still validates the image and never trusts this number alone.
+    let faceCount = null;
+    if ("FaceDetector" in window) {
+      try {
+        const detector = new FaceDetector({ fastMode: true, maxDetectedFaces: 10 });
+        const faces = await detector.detect(canvas);
+        faceCount = Array.isArray(faces) ? faces.length : null;
+      } catch (e) {
+        faceCount = null;
+      }
+    }
     const result = await api("/api/student/attendance", {
       method: "POST",
-      body: JSON.stringify({ code: state.session.code, photo }),
+      body: JSON.stringify({ code: state.session.code, photo, faceCount }),
     });
     stopCamera();
     stopCountdown();

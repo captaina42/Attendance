@@ -161,11 +161,19 @@ function logVerification({ attendanceId = null, sessionId, studentId, method, ok
   ).run(attendanceId, sessionId, studentId, method, ok ? 1 : 0, detail, Date.now());
 }
 
-function flagSubmission({ attendanceId, sessionId, studentId, reason }) {
+function flagSubmission({ attendanceId, sessionId, studentId, reason, severity = "medium", detectionResult = "" }) {
   db.prepare(
-    `INSERT INTO flagged_submissions (attendance_id, session_id, student_id, reason, created_at)
-     VALUES (?,?,?,?,?)`,
-  ).run(attendanceId, sessionId, studentId, reason, Date.now());
+    `INSERT INTO flagged_submissions
+       (attendance_id, session_id, student_id, reason, severity, detection_result, review_status, created_at)
+     VALUES (?,?,?,?,?,?, 'PENDING REVIEW', ?)`,
+  ).run(attendanceId, sessionId, studentId, reason, severity, detectionResult, Date.now());
+}
+
+function auditLog({ actorRole, actorId = null, action, entityType, entityId = null, oldValue = "", newValue = "", detail = "" }) {
+  db.prepare(
+    `INSERT INTO audit_log (actor_role, actor_id, action, entity_type, entity_id, old_value, new_value, detail, created_at)
+     VALUES (?,?,?,?,?,?,?,?,?)`,
+  ).run(actorRole, actorId, action, entityType, entityId, String(oldValue), String(newValue), detail, Date.now());
 }
 
 module.exports = {
@@ -188,4 +196,5 @@ module.exports = {
   flagged,
   logVerification,
   flagSubmission,
+  auditLog,
 };

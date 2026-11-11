@@ -603,3 +603,21 @@ tr.sel {
   padding: 10px 18px;
   display: inline-block;
 }
+
+/* ---- photo review modal + toast ---- */
+.modal-backdrop{position:fixed;inset:0;background:rgba(10,18,40,.55);display:flex;align-items:center;justify-content:center;z-index:1000;padding:16px}
+.modal{background:#fff;border-radius:12px;max-width:720px;width:100%;max-height:90vh;overflow:auto;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.modal-head{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid #e5e7eb}
+.modal-body{padding:16px 18px;display:grid;gap:12px}
+.modal-body img{width:100%;max-height:360px;object-fit:contain;background:#0b1020;border-radius:8px}
+.modal-foot{padding:12px 18px;border-top:1px solid #e5e7eb;display:flex;gap:8px;flex-wrap:wrap}
+.toast{position:fixed;right:16px;bottom:16px;background:#0a1d4a;color:#fff;padding:12px 16px;border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.25);max-width:360px;z-index:1100;display:none}
+.toast.show{display:block}
+.toast .t{font-weight:600;margin-bottom:4px}
+.sev-high{color:#b91c1c;font-weight:600}
+.sev-medium{color:#b45309;font-weight:600}
+.sev-low{color:#1d4ed8}
+.status-pill{display:inline-block;padding:2px 8px;border-radius:999px;font-size:12px;font-weight:600}
+.status-pill.pending{background:#fef3c7;color:#92400e}
+.status-pill.cleared{background:#dcfce7;color:#166534}
+.status-pill.confirmed{background:#fee2e2;color:#991b1b}

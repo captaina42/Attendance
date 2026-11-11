@@ -30,8 +30,11 @@ function client() {
   };
 }
 
-const photo = (seed) =>
-  "data:image/jpeg;base64," + Buffer.alloc(4096, seed).toString("base64");
+let _photos = [];
+const photo = (seed) => {
+  const n = typeof seed === "number" ? seed : String(seed).charCodeAt(0) || 0;
+  return _photos[n % Math.max(1, _photos.length)] || "data:image/jpeg;base64,";
+};
 
 let failures = 0;
 function check(label, ok, extra) {
@@ -102,6 +105,28 @@ async function biometric(student) {
 }
 
 async function main() {
+  // Real (tiny) JPEGs so the server's photo validation pipeline is exercised end to end.
+  const { Jimp } = require("jimp");
+  const runNonce = Math.floor(Math.random() * 1e9);
+  const seeds = [1, 2, 3, 4, 5, 6].map((s) => s * 999983 + runNonce);
+  _photos = await Promise.all(
+    seeds.map(async (seed) => {
+      const img = new Jimp({ width: 256, height: 256 });
+      let state = seed >>> 0;
+      img.scan(0, 0, 256, 256, (x, y, idx) => {
+        state = (state * 1103515245 + 12345) >>> 0;
+        img.bitmap.data[idx] = (state >>> 16) & 0xff;
+        state = (state * 1103515245 + 12345) >>> 0;
+        img.bitmap.data[idx + 1] = (state >>> 16) & 0xff;
+        state = (state * 1103515245 + 12345) >>> 0;
+        img.bitmap.data[idx + 2] = (state >>> 16) & 0xff;
+        img.bitmap.data[idx + 3] = 255;
+      });
+      const b = await img.getBuffer("image/jpeg", { quality: 80 });
+      return "data:image/jpeg;base64," + b.toString("base64");
+    }),
+  );
+
   // 1. Lecturer signs in.
   const { staff, user, login } = await asStaff();
   check("1. lecturer authenticated", login === 201 || login === 200, `status ${login}, ${user?.email}`);
